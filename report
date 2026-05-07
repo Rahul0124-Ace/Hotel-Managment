@@ -1,0 +1,61 @@
+# Project Analysis Report: Hotel Management System
+
+Based on the analysis of your project directory, here is a detailed breakdown of your application.
+
+## 1. The Core Idea
+The project is a modern, full-stack **Hotel Management System**. The core idea you provided was to build an application featuring a branded dashboard with a **Deep Midnight Blue and Neon Cyan design aesthetic**. 
+
+Key functionalities include:
+- A vertical sidebar with navigation (React Router).
+- A **Dashboard Overview** showing statistics like Total Rooms, Booked, Available, and Revenue.
+- A **Guest Personal Information** module where staff can register new guests and view a list of registered guests.
+- Seamless integration between the frontend and a backend API to persist data in an H2 in-memory database.
+
+## 2. Code Languages & Technologies Used
+Your project utilizes a mix of modern web technologies, combined in a unique, single-repository structure:
+- **Backend Language:** Java 25
+- **Backend Framework:** Spring Boot 4.0.6 (Spring Web, Spring Data JPA, Spring Security)
+- **Frontend Languages:** HTML5, JavaScript (ES6+), and JSX (compiled in the browser)
+- **Frontend Libraries:** React 18 & ReactDOM (via CDN), React Router DOM (via CDN), Tailwind CSS (for styling)
+- **Database:** H2 In-Memory Database (with MySQL connector available for future scaling)
+- **Build Tool:** Gradle
+
+## 3. Project Structure
+The project is set up as a monolithic Spring Boot application where the React frontend is served as a static resource.
+
+```text
+c:\Users\rahul\OneDrive\Desktop\Hotel Managment\
+└── backend\
+    ├── build.gradle                 # Gradle build configuration and dependencies
+    └── src\
+        └── main\
+            ├── java\com\hotel\
+            │   ├── BackendApplication.java       # Spring Boot main entry point
+            │   ├── config\SecurityConfig.java    # Security configurations (CORS, CSRF, auth rules)
+            │   ├── controllers\GuestController.java # REST API endpoints for guest operations
+            │   ├── models\Guest.java             # JPA Entity representing a Guest in the DB
+            │   └── repositories\GuestRepository.java # JPA Repository for database operations
+            │
+            └── resources\
+                ├── application.properties        # Database and application configuration
+                └── static\
+                    └── index.html                # The entire React frontend (UI, logic, and styling)
+```
+
+## 4. Detailed File Breakdown
+
+### The Frontend (`index.html`)
+Instead of a traditional Node.js build process, you have cleverly embedded a full React application directly into `src/main/resources/static/index.html`. 
+- **Tailwind Config:** Custom theme injected directly into the script tag, defining your specific colors (`dark: '#0B0C10'`, `cyan: '#66FCF1'`, `card: '#1F2833'`, etc.).
+- **Babel Standalone:** Compiles your JSX code (`<script type="text/babel">`) on the fly in the browser.
+- **React Components:** Includes components for `Sidebar`, `Dashboard`, and `GuestInformation`. The `GuestInformation` component actively makes `fetch` requests to `http://localhost:8080/api/guests` to POST and GET guest data.
+
+### The Backend (Java Spring Boot)
+- **`build.gradle`**: Configures the project to use Java 25 and includes necessary Spring Boot starters (Web, Data JPA, Security) and Lombok to reduce boilerplate code.
+- **`Guest.java`**: The data model representing the guest. It likely includes fields like `id`, `fullName`, `email`, `phone`, and `address` to match the frontend form.
+- **`GuestRepository.java`**: Handles the communication with the H2 database, giving you out-of-the-box methods to save and retrieve guests.
+- **`GuestController.java`**: Exposes the `/api/guests` API endpoints that the React frontend calls.
+- **`SecurityConfig.java`**: Ensures that the REST API is accessible from the frontend, likely handling CORS (Cross-Origin Resource Sharing) configurations so the browser doesn't block the requests.
+
+## Summary
+You have successfully laid the foundation for a full-stack web application. The frontend looks premium with its neon aesthetics, and the backend is robustly structured using enterprise-grade Spring Boot patterns.

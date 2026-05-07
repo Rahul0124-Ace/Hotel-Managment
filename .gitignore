@@ -1,0 +1,16 @@
+# Ignore build outputs
+backend/build/
+backend/bin/
+backend/.gradle/
+backend/build_output.txt
+
+# Ignore IDE settings
+.vscode/
+.idea/
+*.swp
+*.log
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Management System</title>
+    <title>HOTEL SYSTEM</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,16 +12,19 @@
             theme: {
                 extend: {
                     colors: {
-                        dark: '#0B0C10',
-                        card: '#1F2833',
-                        cyan: '#66FCF1',
-                        cyanLight: '#45A29E',
-                        gold: '#F2A900',
-                        glow: 'rgba(102, 252, 241, 0.4)'
+                        dark: '#000000',
+                        card: '#111111',
+                        cyan: '#00FFFF',
+                        magenta: '#FF00FF',
+                        lime: '#39FF14',
+                        yellow: '#FFFF00',
                     },
                     boxShadow: {
-                        'glow': '0 0 15px rgba(102, 252, 241, 0.2)',
-                        'glow-hover': '0 0 25px rgba(102, 252, 241, 0.5)'
+                        'glow': '0 0 15px rgba(0, 255, 255, 0.4)',
+                        'glow-hover': '0 0 25px rgba(0, 255, 255, 0.7)',
+                        'glow-magenta': '0 0 15px rgba(255, 0, 255, 0.4)',
+                        'glow-magenta-hover': '0 0 25px rgba(255, 0, 255, 0.7)',
+                        'glow-lime': '0 0 15px rgba(57, 255, 20, 0.4)'
                     }
                 }
             }
@@ -44,12 +47,17 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        body { background-color: #0B0C10; color: #C5C6C7; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden;}
-        .text-cyan-gradient {
-            background: linear-gradient(90deg, #66FCF1 0%, #45A29E 100%);
+        body { background-color: #000000; color: #E0E0E0; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden;}
+        .text-neon-gradient {
+            background: linear-gradient(90deg, #00FFFF 0%, #FF00FF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        /* Custom scrollbar for neon theme */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #00FFFF; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FF00FF; }
     </style>
 </head>
 <body>
@@ -59,7 +67,6 @@
         const { useState, useEffect } = React;
         const { HashRouter, Routes, Route, Link, useLocation } = ReactRouterDOM;
 
-        // Custom Icon Component to easily render Lucide icons
         const Icon = ({ name, className }) => {
             useEffect(() => {
                 lucide.createIcons();
@@ -72,30 +79,29 @@
             
             const navLinks = [
                 { path: '/', label: 'Dashboard', icon: 'layout-dashboard' },
-                { path: '/check-in', label: 'Check-In / Check-Out', icon: 'log-in' },
+                { path: '/guests', label: 'Guest Registration', icon: 'users' },
+                { path: '/check-in', label: 'Check-In / Out', icon: 'log-in' },
                 { path: '/room-service', label: 'Room Service', icon: 'concierge-bell' },
-                { path: '/payments', label: 'Payment Details', icon: 'credit-card' },
-                { path: '/guests', label: 'Guest Personal Information', icon: 'users' },
-                { path: '/availability', label: 'Room Availability', icon: 'calendar-check' }
+                { path: '/payments', label: 'Payment Details', icon: 'credit-card' }
             ];
 
             return (
-                <aside className="w-72 bg-card h-screen border-r border-gray-800 fixed left-0 top-0 shadow-glow flex flex-col z-10">
-                    <div className="p-8 border-b border-gray-800">
+                <aside className="w-72 bg-card h-screen border-r border-cyan/30 fixed left-0 top-0 shadow-glow flex flex-col z-10">
+                    <div className="p-8 border-b border-cyan/30">
                         <div className="flex items-center gap-4">
-                            <Icon name="hotel" className="text-cyan w-10 h-10" />
-                            <h1 className="text-2xl font-bold text-cyan-gradient">
-                                Hotel Mgmt
+                            <Icon name="hotel" className="text-cyan w-10 h-10 drop-shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
+                            <h1 className="text-2xl font-bold text-neon-gradient drop-shadow-[0_0_10px_rgba(0,255,255,0.4)]">
+                                HOTEL SYSTEM
                             </h1>
                         </div>
                     </div>
-                    <nav className="flex-1 p-6 space-y-3 overflow-y-auto">
+                    <nav className="flex-1 p-6 space-y-4 overflow-y-auto">
                         {navLinks.map((link, idx) => {
                             const isActive = location.pathname === link.path;
                             return (
                                 <Link key={idx} to={link.path} 
-                                    className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-300 ${isActive ? 'bg-cyan/10 text-cyan shadow-[inset_4px_0_0_0_#66FCF1]' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                                    <Icon name={link.icon} className="w-5 h-5" />
+                                    className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-300 ${isActive ? 'bg-cyan/20 text-cyan shadow-glow border border-cyan/50' : 'text-gray-400 hover:bg-magenta/10 hover:text-magenta hover:shadow-glow-magenta hover:border hover:border-magenta/50 border border-transparent'}`}>
+                                    <Icon name={link.icon} className={`w-5 h-5 ${isActive ? 'drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]' : ''}`} />
                                     <span className="font-medium tracking-wide">{link.label}</span>
                                 </Link>
                             );
@@ -108,63 +114,36 @@
         const Dashboard = () => {
             return (
                 <div className="animate-in fade-in duration-500">
-                    <header className="flex justify-between items-center mb-10 border-b border-gray-800 pb-6">
-                        <h2 className="text-3xl font-bold text-white">Dashboard Overview</h2>
+                    <header className="flex justify-between items-center mb-10 border-b border-cyan/30 pb-6">
+                        <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">System Dashboard</h2>
                         <div className="flex items-center gap-4">
-                            <span className="text-gray-400">Admin Staff</span>
-                            <div className="w-12 h-12 rounded-full border-2 border-cyan p-0.5 shadow-glow">
+                            <span className="text-gray-300 font-mono">System Admin</span>
+                            <div className="w-12 h-12 rounded-full border-2 border-magenta p-0.5 shadow-glow-magenta">
                                 <div className="w-full h-full rounded-full bg-card flex items-center justify-center">
-                                    <Icon name="user" className="w-6 h-6 text-cyan" />
+                                    <Icon name="zap" className="w-6 h-6 text-magenta drop-shadow-[0_0_5px_rgba(255,0,255,0.8)]" />
                                 </div>
                             </div>
                         </div>
                     </header>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
-                        {/* Stat Cards */}
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 hover:border-cyan transition-all duration-300 shadow-glow hover:shadow-glow-hover cursor-pointer">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-gray-400 text-sm font-medium">Total Rooms</p>
-                                    <h3 className="text-4xl font-bold mt-2 text-white">124</h3>
-                                </div>
-                                <div className="bg-cyan/10 p-3 rounded-xl text-cyan">
-                                    <Icon name="key" />
-                                </div>
-                            </div>
+                        <div className="bg-card p-6 rounded-xl border border-cyan/30 hover:border-cyan transition-all duration-300 shadow-glow hover:shadow-glow-hover cursor-pointer relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-cyan/10 rounded-bl-full -mr-4 -mt-4"></div>
+                            <p className="text-cyan text-sm font-bold uppercase tracking-wider mb-2">Network Rooms</p>
+                            <h3 className="text-4xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">10</h3>
+                            <Icon name="server" className="absolute bottom-4 right-4 text-cyan/30 w-12 h-12" />
                         </div>
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 hover:border-cyan transition-all duration-300 shadow-glow hover:shadow-glow-hover cursor-pointer">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-gray-400 text-sm font-medium">Booked</p>
-                                    <h3 className="text-4xl font-bold mt-2 text-cyan">86</h3>
-                                </div>
-                                <div className="bg-cyan/10 p-3 rounded-xl text-cyan">
-                                    <Icon name="calendar-check" />
-                                </div>
-                            </div>
+                        <div className="bg-card p-6 rounded-xl border border-magenta/30 hover:border-magenta transition-all duration-300 shadow-glow-magenta hover:shadow-glow-magenta-hover cursor-pointer relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-magenta/10 rounded-bl-full -mr-4 -mt-4"></div>
+                            <p className="text-magenta text-sm font-bold uppercase tracking-wider mb-2">Active Guests</p>
+                            <h3 className="text-4xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">0</h3>
+                            <Icon name="users" className="absolute bottom-4 right-4 text-magenta/30 w-12 h-12" />
                         </div>
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 hover:border-gold transition-all duration-300 shadow-glow hover:shadow-glow-hover cursor-pointer">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-gray-400 text-sm font-medium">Available</p>
-                                    <h3 className="text-4xl font-bold mt-2 text-gold">38</h3>
-                                </div>
-                                <div className="bg-gold/10 p-3 rounded-xl text-gold">
-                                    <Icon name="door-open" />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 hover:border-cyan transition-all duration-300 shadow-glow hover:shadow-glow-hover cursor-pointer">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-gray-400 text-sm font-medium">Revenue</p>
-                                    <h3 className="text-4xl font-bold mt-2 text-white">$12,450</h3>
-                                </div>
-                                <div className="bg-cyan/10 p-3 rounded-xl text-cyan">
-                                    <Icon name="dollar-sign" />
-                                </div>
-                            </div>
+                        <div className="bg-card p-6 rounded-xl border border-lime/30 hover:border-lime transition-all duration-300 shadow-glow-lime cursor-pointer relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-lime/10 rounded-bl-full -mr-4 -mt-4"></div>
+                            <p className="text-lime text-sm font-bold uppercase tracking-wider mb-2">System Status</p>
+                            <h3 className="text-2xl font-bold text-white mt-2 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">ONLINE</h3>
+                            <Icon name="activity" className="absolute bottom-4 right-4 text-lime/30 w-12 h-12" />
                         </div>
                     </div>
                 </div>
@@ -174,112 +153,80 @@
         const GuestInformation = () => {
             const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', address: '' });
             const [guests, setGuests] = useState([]);
-            const [loading, setLoading] = useState(false);
             const [msg, setMsg] = useState('');
 
             const fetchGuests = async () => {
                 try {
                     const res = await fetch('http://localhost:8080/api/guests');
-                    if (res.ok) {
-                        const data = await res.json();
-                        setGuests(data);
-                    }
-                } catch (err) {
-                    console.error("Could not fetch guests. Ensure backend is running.", err);
-                }
+                    if(res.ok) setGuests(await res.json());
+                } catch(e) {}
             };
 
-            useEffect(() => {
-                fetchGuests();
-            }, []);
-
-            const handleChange = (e) => setFormData({...formData, [e.target.name]: e.target.value});
+            useEffect(() => { fetchGuests(); }, []);
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
-                setLoading(true);
                 try {
                     const res = await fetch('http://localhost:8080/api/guests', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData)
+                        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(formData)
                     });
-                    if (res.ok) {
-                        setMsg("Guest saved successfully!");
-                        setFormData({ fullName: '', email: '', phone: '', address: '' });
+                    if(res.ok) {
+                        setMsg("Guest Data Encrypted & Saved.");
+                        setFormData({fullName:'', email:'', phone:'', address:''});
                         fetchGuests();
-                    } else {
-                        setMsg("Error saving guest.");
                     }
-                } catch (err) {
-                    setMsg("Network error. Backend might not be running.");
-                }
-                setLoading(false);
+                } catch(e) { setMsg("Connection Error."); }
                 setTimeout(() => setMsg(''), 3000);
             };
 
             return (
                 <div className="animate-in fade-in duration-500">
-                    <header className="mb-10 border-b border-gray-800 pb-6">
-                        <h2 className="text-3xl font-bold text-white">Guest Personal Information</h2>
+                    <header className="mb-10 border-b border-cyan/30 pb-6">
+                        <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Guest Data Portal</h2>
                     </header>
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        {/* Form */}
-                        <div className="bg-card p-8 rounded-2xl border border-gray-800 shadow-glow">
-                            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2 text-cyan">
-                                <Icon name="user-plus" className="w-5 h-5"/> Register New Guest
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        <div className="lg:col-span-2 bg-card p-8 rounded-xl border border-cyan/50 shadow-glow">
+                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-cyan drop-shadow-[0_0_5px_rgba(0,255,255,0.5)]">
+                                <Icon name="terminal" className="w-5 h-5"/> Initialize New Guest Entity
                             </h3>
-                            {msg && <div className="mb-4 p-3 bg-cyan/20 border border-cyan text-cyan rounded-lg">{msg}</div>}
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <div>
-                                    <label className="block text-gray-400 text-sm mb-2">Full Name</label>
-                                    <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required
-                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan focus:ring-1 focus:ring-cyan transition-all" placeholder="John Doe"/>
+                            {msg && <div className="mb-4 p-3 bg-lime/20 border border-lime text-lime rounded font-mono">{msg}</div>}
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-cyan text-xs font-mono uppercase mb-2">Subject Name</label>
+                                        <input type="text" value={formData.fullName} onChange={e=>setFormData({...formData, fullName: e.target.value})} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white focus:outline-none focus:border-cyan focus:shadow-glow transition-all font-mono"/>
+                                    </div>
+                                    <div>
+                                        <label className="block text-cyan text-xs font-mono uppercase mb-2">Comms Link (Email)</label>
+                                        <input type="email" value={formData.email} onChange={e=>setFormData({...formData, email: e.target.value})} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white focus:outline-none focus:border-cyan focus:shadow-glow transition-all font-mono"/>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-gray-400 text-sm mb-2">Email Address</label>
-                                    <input type="email" name="email" value={formData.email} onChange={handleChange} required
-                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan focus:ring-1 focus:ring-cyan transition-all" placeholder="john@example.com"/>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-cyan text-xs font-mono uppercase mb-2">Direct Frequency (Phone)</label>
+                                        <input type="text" value={formData.phone} onChange={e=>setFormData({...formData, phone: e.target.value})} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white focus:outline-none focus:border-cyan focus:shadow-glow transition-all font-mono"/>
+                                    </div>
+                                    <div>
+                                        <label className="block text-cyan text-xs font-mono uppercase mb-2">Origin Coordinates (Address)</label>
+                                        <input type="text" value={formData.address} onChange={e=>setFormData({...formData, address: e.target.value})} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white focus:outline-none focus:border-cyan focus:shadow-glow transition-all font-mono"/>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-gray-400 text-sm mb-2">Phone Number</label>
-                                    <input type="text" name="phone" value={formData.phone} onChange={handleChange} required
-                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan focus:ring-1 focus:ring-cyan transition-all" placeholder="+1 234 567 8900"/>
-                                </div>
-                                <div>
-                                    <label className="block text-gray-400 text-sm mb-2">Home Address</label>
-                                    <textarea name="address" value={formData.address} onChange={handleChange} required rows="3"
-                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-cyan focus:ring-1 focus:ring-cyan transition-all" placeholder="123 Main St, City, Country"></textarea>
-                                </div>
-                                <button type="submit" disabled={loading}
-                                    className="w-full bg-cyan hover:bg-cyanLight text-dark font-bold py-3 px-4 rounded-lg transition-all shadow-[0_0_15px_rgba(102,252,241,0.5)]">
-                                    {loading ? 'Saving...' : 'Save Guest Details'}
+                                <button type="submit" className="w-full bg-cyan/10 border border-cyan text-cyan hover:bg-cyan hover:text-dark font-bold font-mono py-4 rounded transition-all shadow-glow hover:shadow-glow-hover uppercase tracking-widest">
+                                    Execute Registration
                                 </button>
                             </form>
                         </div>
-
-                        {/* Recent Guests List */}
-                        <div className="bg-card p-8 rounded-2xl border border-gray-800 shadow-glow">
-                            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2 text-white">
-                                <Icon name="list" className="w-5 h-5"/> Registered Guests
+                        <div className="bg-card p-8 rounded-xl border border-magenta/50 shadow-glow-magenta h-[600px] overflow-y-auto">
+                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-magenta drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]">
+                                <Icon name="database" className="w-5 h-5"/> Entity Database
                             </h3>
                             <div className="space-y-4">
-                                {guests.length === 0 ? (
-                                    <p className="text-gray-500 italic">No guests found. Backend API might not be connected.</p>
-                                ) : (
-                                    guests.map((g, i) => (
-                                        <div key={i} className="p-4 bg-dark rounded-xl border border-gray-800 flex justify-between items-center hover:border-cyan transition-all">
-                                            <div>
-                                                <h4 className="font-semibold text-white">{g.fullName}</h4>
-                                                <p className="text-sm text-gray-400">{g.email}</p>
-                                            </div>
-                                            <div className="bg-cyan/10 p-2 rounded-lg">
-                                                <Icon name="check-circle" className="w-5 h-5 text-cyan" />
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                                {guests.map((g, i) => (
+                                    <div key={i} className="p-4 bg-dark rounded border border-magenta/30 hover:border-magenta hover:shadow-glow-magenta transition-all">
+                                        <h4 className="font-bold text-white font-mono">{g.fullName}</h4>
+                                        <p className="text-xs text-gray-400 font-mono mt-1">{g.email}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -287,29 +234,291 @@
             );
         };
 
-        const PlaceholderView = ({ title, icon }) => (
-            <div className="animate-in fade-in duration-500 h-full flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-24 h-24 bg-card rounded-full flex items-center justify-center mb-6 shadow-glow border border-cyan/30">
-                    <Icon name={icon} className="w-12 h-12 text-cyan" />
+        const CheckInOut = () => {
+            const [rooms, setRooms] = useState([]);
+            const [guests, setGuests] = useState([]);
+            const [bookings, setBookings] = useState([]);
+            const [selectedGuest, setSelectedGuest] = useState('');
+            const [selectedRoom, setSelectedRoom] = useState('');
+            const [msg, setMsg] = useState('');
+
+            const fetchData = async () => {
+                try {
+                    const rRes = await fetch('http://localhost:8080/api/rooms');
+                    if(rRes.ok) setRooms(await rRes.json());
+                    const gRes = await fetch('http://localhost:8080/api/guests');
+                    if(gRes.ok) setGuests(await gRes.json());
+                    const bRes = await fetch('http://localhost:8080/api/bookings');
+                    if(bRes.ok) setBookings(await bRes.json());
+                } catch(e) {}
+            };
+
+            useEffect(() => { fetchData(); }, []);
+
+            const handleCheckIn = async (e) => {
+                e.preventDefault();
+                const guestObj = guests.find(g => g.id == selectedGuest);
+                const roomObj = rooms.find(r => r.id == selectedRoom);
+                if(!guestObj || !roomObj) return;
+
+                try {
+                    const res = await fetch('http://localhost:8080/api/bookings', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ guest: guestObj, room: roomObj, checkInDate: new Date().toISOString().split('T')[0], status: 'Active' })
+                    });
+                    if(res.ok) {
+                        setMsg("Booking Activated.");
+                        fetchData();
+                    }
+                } catch(e) { setMsg("Error activating booking."); }
+                setTimeout(()=>setMsg(''), 3000);
+            };
+
+            return (
+                <div className="animate-in fade-in duration-500">
+                    <header className="mb-10 border-b border-cyan/30 pb-6">
+                        <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Sector Assignment (Check-In)</h2>
+                    </header>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div className="bg-card p-8 rounded-xl border border-cyan/50 shadow-glow">
+                            <h3 className="text-xl font-bold mb-6 text-cyan font-mono flex items-center gap-2"><Icon name="key"/> Allocate Room</h3>
+                            {msg && <div className="mb-4 p-3 bg-lime/20 text-lime border border-lime rounded font-mono">{msg}</div>}
+                            <form onSubmit={handleCheckIn} className="space-y-6">
+                                <div>
+                                    <label className="block text-cyan text-xs font-mono uppercase mb-2">Select Entity (Guest)</label>
+                                    <select value={selectedGuest} onChange={e=>setSelectedGuest(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white font-mono focus:border-cyan outline-none">
+                                        <option value="">-- Awaiting Selection --</option>
+                                        {guests.map(g => <option key={g.id} value={g.id}>{g.fullName}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-cyan text-xs font-mono uppercase mb-2">Available Sectors (Rooms)</label>
+                                    <select value={selectedRoom} onChange={e=>setSelectedRoom(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white font-mono focus:border-cyan outline-none">
+                                        <option value="">-- Awaiting Selection --</option>
+                                        {rooms.map(r => <option key={r.id} value={r.id}>Sector {r.roomNumber} - {r.type} (${r.pricePerNight})</option>)}
+                                    </select>
+                                </div>
+                                <button type="submit" className="w-full bg-magenta/20 border border-magenta text-magenta hover:bg-magenta hover:text-white font-bold font-mono py-4 rounded transition-all shadow-glow-magenta uppercase tracking-widest">
+                                    Initiate Allocation
+                                </button>
+                            </form>
+                        </div>
+                        <div className="bg-card p-8 rounded-xl border border-cyan/50 shadow-glow overflow-y-auto h-[500px]">
+                            <h3 className="text-xl font-bold mb-6 text-cyan font-mono flex items-center gap-2"><Icon name="activity"/> Active Allocations</h3>
+                            <div className="space-y-4">
+                                {bookings.filter(b=>b.status==='Active').map(b => (
+                                    <div key={b.id} className="p-4 border border-cyan/30 rounded bg-dark flex justify-between items-center">
+                                        <div>
+                                            <p className="text-white font-bold font-mono">{b.guest?.fullName}</p>
+                                            <p className="text-cyan text-xs font-mono">Sector: {b.room?.roomNumber}</p>
+                                        </div>
+                                        <div className="px-3 py-1 bg-lime/20 text-lime text-xs font-mono border border-lime rounded">ACTIVE</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-4">{title}</h2>
-                <p className="text-gray-400 max-w-md mx-auto">This module is currently under development. Please check back later or proceed to Guest Information.</p>
-            </div>
-        );
+            );
+        };
+
+        const RoomService = () => {
+            const [bookings, setBookings] = useState([]);
+            const [orders, setOrders] = useState([]);
+            const [selectedBooking, setSelectedBooking] = useState('');
+            const [desc, setDesc] = useState('');
+            const [amount, setAmount] = useState('');
+            const [msg, setMsg] = useState('');
+
+            const fetchData = async () => {
+                try {
+                    const bRes = await fetch('http://localhost:8080/api/bookings');
+                    if(bRes.ok) setBookings((await bRes.json()).filter(b=>b.status==='Active'));
+                    const oRes = await fetch('http://localhost:8080/api/orders');
+                    if(oRes.ok) setOrders(await oRes.json());
+                } catch(e) {}
+            };
+
+            useEffect(() => { fetchData(); }, []);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                const bookingObj = bookings.find(b => b.id == selectedBooking);
+                if(!bookingObj) return;
+
+                try {
+                    const res = await fetch('http://localhost:8080/api/orders', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ booking: bookingObj, description: desc, amount: parseFloat(amount), status: 'Pending' })
+                    });
+                    if(res.ok) {
+                        setMsg("Service Request Transmitted.");
+                        setDesc(''); setAmount('');
+                        fetchData();
+                    }
+                } catch(e) {}
+                setTimeout(()=>setMsg(''), 3000);
+            };
+
+            return (
+                <div className="animate-in fade-in duration-500">
+                    <header className="mb-10 border-b border-magenta/30 pb-6">
+                        <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Internal Logistics (Room Service)</h2>
+                    </header>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div className="bg-card p-8 rounded-xl border border-magenta/50 shadow-glow-magenta">
+                            <h3 className="text-xl font-bold mb-6 text-magenta font-mono">Submit Service Request</h3>
+                            {msg && <div className="mb-4 p-3 bg-lime/20 text-lime border border-lime rounded font-mono">{msg}</div>}
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div>
+                                    <label className="block text-magenta text-xs font-mono uppercase mb-2">Target Sector (Active Booking)</label>
+                                    <select value={selectedBooking} onChange={e=>setSelectedBooking(e.target.value)} required className="w-full bg-dark border border-magenta/30 rounded p-3 text-white font-mono focus:border-magenta outline-none">
+                                        <option value="">-- Awaiting Selection --</option>
+                                        {bookings.map(b => <option key={b.id} value={b.id}>Sector {b.room?.roomNumber} - {b.guest?.fullName}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-magenta text-xs font-mono uppercase mb-2">Request Parameters</label>
+                                    <input type="text" value={desc} onChange={e=>setDesc(e.target.value)} required placeholder="e.g. Neon Energy Drink" className="w-full bg-dark border border-magenta/30 rounded p-3 text-white font-mono focus:border-magenta outline-none"/>
+                                </div>
+                                <div>
+                                    <label className="block text-magenta text-xs font-mono uppercase mb-2">Credit Amount</label>
+                                    <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} required placeholder="15.00" className="w-full bg-dark border border-magenta/30 rounded p-3 text-white font-mono focus:border-magenta outline-none"/>
+                                </div>
+                                <button type="submit" className="w-full bg-magenta border border-magenta text-white font-bold font-mono py-4 rounded transition-all shadow-glow-magenta hover:shadow-glow-magenta-hover uppercase tracking-widest">
+                                    Transmit Order
+                                </button>
+                            </form>
+                        </div>
+                        <div className="bg-card p-8 rounded-xl border border-magenta/50 shadow-glow-magenta overflow-y-auto h-[500px]">
+                            <h3 className="text-xl font-bold mb-6 text-magenta font-mono">Logistics Log</h3>
+                            <div className="space-y-4">
+                                {orders.map(o => (
+                                    <div key={o.id} className="p-4 border border-magenta/30 rounded bg-dark">
+                                        <div className="flex justify-between mb-2">
+                                            <span className="text-white font-mono font-bold">Sector {o.booking?.room?.roomNumber}</span>
+                                            <span className="text-yellow text-xs font-mono border border-yellow px-2 py-0.5 rounded">{o.status}</span>
+                                        </div>
+                                        <p className="text-gray-400 font-mono text-sm">{o.description}</p>
+                                        <p className="text-lime font-mono text-sm mt-2">${o.amount.toFixed(2)}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PaymentDetails = () => {
+            const [bookings, setBookings] = useState([]);
+            const [orders, setOrders] = useState([]);
+            const [selectedBooking, setSelectedBooking] = useState('');
+            const [msg, setMsg] = useState('');
+
+            const fetchData = async () => {
+                try {
+                    const bRes = await fetch('http://localhost:8080/api/bookings');
+                    if(bRes.ok) setBookings((await bRes.json()).filter(b=>b.status==='Active'));
+                    const oRes = await fetch('http://localhost:8080/api/orders');
+                    if(oRes.ok) setOrders(await oRes.json());
+                } catch(e) {}
+            };
+
+            useEffect(() => { fetchData(); }, []);
+
+            const handlePayment = async (total) => {
+                const bookingObj = bookings.find(b => b.id == selectedBooking);
+                try {
+                    const res = await fetch('http://localhost:8080/api/payments', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ booking: bookingObj, totalAmount: total, paymentDate: new Date().toISOString(), isPaid: true })
+                    });
+                    if(res.ok) setMsg("Transaction Verified & Logged.");
+                } catch(e) { setMsg("Transaction Failed."); }
+                setTimeout(()=>setMsg(''), 3000);
+            };
+
+            let total = 0;
+            let roomCost = 0;
+            let orderTotal = 0;
+            let bOrders = [];
+            if(selectedBooking) {
+                const b = bookings.find(x => x.id == selectedBooking);
+                if(b) {
+                    roomCost = b.room?.pricePerNight || 0;
+                    bOrders = orders.filter(o => o.booking?.id == selectedBooking);
+                    orderTotal = bOrders.reduce((sum, o) => sum + o.amount, 0);
+                    total = roomCost + orderTotal;
+                }
+            }
+
+            return (
+                <div className="animate-in fade-in duration-500">
+                    <header className="mb-10 border-b border-lime/30 pb-6">
+                        <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Financial Gateway (Payments)</h2>
+                    </header>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div className="bg-card p-8 rounded-xl border border-lime/50 shadow-glow-lime">
+                            <h3 className="text-xl font-bold mb-6 text-lime font-mono">Select Account</h3>
+                            {msg && <div className="mb-4 p-3 bg-cyan/20 text-cyan border border-cyan rounded font-mono">{msg}</div>}
+                            <select value={selectedBooking} onChange={e=>setSelectedBooking(e.target.value)} className="w-full bg-dark border border-lime/30 rounded p-3 text-white font-mono focus:border-lime outline-none mb-6">
+                                <option value="">-- Select Active Sector --</option>
+                                {bookings.map(b => <option key={b.id} value={b.id}>Sector {b.room?.roomNumber} - {b.guest?.fullName}</option>)}
+                            </select>
+
+                            {selectedBooking && (
+                                <div className="space-y-4 font-mono">
+                                    <div className="flex justify-between border-b border-gray-800 pb-2">
+                                        <span className="text-gray-400">Sector Base Rate:</span>
+                                        <span className="text-white">${roomCost.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-gray-800 pb-2">
+                                        <span className="text-gray-400">Logistics (Orders):</span>
+                                        <span className="text-white">${orderTotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between pt-4">
+                                        <span className="text-lime font-bold text-xl">TOTAL DUE:</span>
+                                        <span className="text-lime font-bold text-xl drop-shadow-[0_0_5px_rgba(57,255,20,0.8)]">${total.toFixed(2)}</span>
+                                    </div>
+                                    <button onClick={()=>handlePayment(total)} className="w-full mt-6 bg-lime/20 border border-lime text-lime hover:bg-lime hover:text-dark font-bold font-mono py-4 rounded transition-all shadow-glow-lime uppercase tracking-widest">
+                                        Process Transaction
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        {selectedBooking && (
+                            <div className="bg-card p-8 rounded-xl border border-lime/30 shadow-glow-lime">
+                                <h3 className="text-xl font-bold mb-6 text-lime font-mono">Logistics Breakdown</h3>
+                                <div className="space-y-3">
+                                    {bOrders.length===0 ? <p className="text-gray-500 font-mono">No external orders logged.</p> :
+                                        bOrders.map(o=>(
+                                            <div key={o.id} className="flex justify-between text-sm font-mono border-b border-gray-800 pb-2">
+                                                <span className="text-gray-300">{o.description}</span>
+                                                <span className="text-white">${o.amount.toFixed(2)}</span>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
 
         const App = () => {
             return (
                 <HashRouter>
-                    <div className="flex bg-dark min-h-screen font-sans">
+                    <div className="flex bg-dark min-h-screen font-sans selection:bg-cyan selection:text-dark">
                         <Sidebar />
                         <main className="flex-1 ml-72 p-10 min-h-screen">
                             <Routes>
                                 <Route path="/" element={<Dashboard />} />
                                 <Route path="/guests" element={<GuestInformation />} />
-                                <Route path="/check-in" element={<PlaceholderView title="Check-In / Check-Out" icon="log-in" />} />
-                                <Route path="/room-service" element={<PlaceholderView title="Room Service" icon="concierge-bell" />} />
-                                <Route path="/payments" element={<PlaceholderView title="Payment Details" icon="credit-card" />} />
-                                <Route path="/availability" element={<PlaceholderView title="Room Availability" icon="calendar-check" />} />
+                                <Route path="/check-in" element={<CheckInOut />} />
+                                <Route path="/room-service" element={<RoomService />} />
+                                <Route path="/payments" element={<PaymentDetails />} />
                             </Routes>
                         </main>
                     </div>
