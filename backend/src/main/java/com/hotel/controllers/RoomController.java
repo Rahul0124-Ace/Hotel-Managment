@@ -24,4 +24,13 @@ public class RoomController {
     public Room createRoom(@RequestBody Room room) {
         return roomRepository.save(room);
     }
+
+    @PutMapping("/{id}/clean")
+    public Room cleanRoom(@PathVariable Long id) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        room.setStatus("AVAILABLE");
+        room.setIsAvailable(true);
+        return roomRepository.save(room);
+    }
 }

@@ -17,4 +17,5 @@ public class Room {
     private String type; // e.g. Single, Double, Suite
     private Double pricePerNight;
     private Boolean isAvailable;
+    private String status; // AVAILABLE, OCCUPIED, DIRTY
 }

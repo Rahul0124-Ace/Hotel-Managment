@@ -69,7 +69,9 @@
 
         const Icon = ({ name, className }) => {
             useEffect(() => {
-                lucide.createIcons();
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
             });
             return <i data-lucide={name} className={className}></i>;
         };
@@ -112,6 +114,40 @@
         };
 
         const Dashboard = () => {
+            const [rooms, setRooms] = useState([]);
+            const [bookings, setBookings] = useState([]);
+            const [msg, setMsg] = useState('');
+
+            const fetchData = async () => {
+                try {
+                    const rRes = await fetch('http://localhost:8080/api/rooms');
+                    if(rRes.ok) setRooms(await rRes.json());
+                    const bRes = await fetch('http://localhost:8080/api/bookings');
+                    if(bRes.ok) setBookings(await bRes.json());
+                } catch(e) {}
+            };
+
+            useEffect(() => { fetchData(); }, []);
+
+            const handleCleanRoom = async (roomId) => {
+                try {
+                    const res = await fetch(`http://localhost:8080/api/rooms/${roomId}/clean`, {
+                        method: 'PUT'
+                    });
+                    if (res.ok) {
+                        setMsg("Room cleared & sanitized by Housekeeping.");
+                        fetchData();
+                    }
+                } catch(e) {
+                    setMsg("Failed to clean room.");
+                }
+                setTimeout(() => setMsg(''), 3000);
+            };
+
+            const activeGuestsCount = bookings.filter(b => b.status === 'Active').length;
+            const occupiedRoomsCount = rooms.filter(r => r.status === 'OCCUPIED').length;
+            const dirtyRoomsCount = rooms.filter(r => r.status === 'DIRTY').length;
+
             return (
                 <div className="animate-in fade-in duration-500">
                     <header className="flex justify-between items-center mb-10 border-b border-cyan/30 pb-6">
@@ -126,24 +162,84 @@
                         </div>
                     </header>
 
+                    {msg && <div className="mb-6 p-4 bg-lime/20 border border-lime text-lime rounded font-mono shadow-glow-lime animate-pulse">{msg}</div>}
+
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
                         <div className="bg-card p-6 rounded-xl border border-cyan/30 hover:border-cyan transition-all duration-300 shadow-glow hover:shadow-glow-hover cursor-pointer relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-16 h-16 bg-cyan/10 rounded-bl-full -mr-4 -mt-4"></div>
-                            <p className="text-cyan text-sm font-bold uppercase tracking-wider mb-2">Network Rooms</p>
-                            <h3 className="text-4xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">10</h3>
+                            <p className="text-cyan text-sm font-bold uppercase tracking-wider mb-2">Total Rooms</p>
+                            <h3 className="text-4xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{rooms.length || 10}</h3>
                             <Icon name="server" className="absolute bottom-4 right-4 text-cyan/30 w-12 h-12" />
                         </div>
                         <div className="bg-card p-6 rounded-xl border border-magenta/30 hover:border-magenta transition-all duration-300 shadow-glow-magenta hover:shadow-glow-magenta-hover cursor-pointer relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-16 h-16 bg-magenta/10 rounded-bl-full -mr-4 -mt-4"></div>
-                            <p className="text-magenta text-sm font-bold uppercase tracking-wider mb-2">Active Guests</p>
-                            <h3 className="text-4xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">0</h3>
+                            <p className="text-magenta text-sm font-bold uppercase tracking-wider mb-2">Occupied Rooms</p>
+                            <h3 className="text-4xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{occupiedRoomsCount}</h3>
                             <Icon name="users" className="absolute bottom-4 right-4 text-magenta/30 w-12 h-12" />
+                        </div>
+                        <div className="bg-card p-6 rounded-xl border border-yellow-500/30 hover:border-yellow-500 transition-all duration-300 shadow-[0_0_15px_rgba(255,255,0,0.2)] cursor-pointer relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4"></div>
+                            <p className="text-yellow text-sm font-bold uppercase tracking-wider mb-2">Dirty Rooms</p>
+                            <h3 className="text-4xl font-bold text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{dirtyRoomsCount}</h3>
+                            <Icon name="brush" className="absolute bottom-4 right-4 text-yellow/30 w-12 h-12" />
                         </div>
                         <div className="bg-card p-6 rounded-xl border border-lime/30 hover:border-lime transition-all duration-300 shadow-glow-lime cursor-pointer relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-16 h-16 bg-lime/10 rounded-bl-full -mr-4 -mt-4"></div>
                             <p className="text-lime text-sm font-bold uppercase tracking-wider mb-2">System Status</p>
                             <h3 className="text-2xl font-bold text-white mt-2 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">ONLINE</h3>
                             <Icon name="activity" className="absolute bottom-4 right-4 text-lime/30 w-12 h-12" />
+                        </div>
+                    </div>
+
+                    <div className="bg-card p-8 rounded-xl border border-cyan/50 shadow-glow mb-10">
+                        <h3 className="text-2xl font-bold mb-6 text-neon-gradient flex items-center gap-3">
+                            <Icon name="grid" className="text-cyan drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" />
+                            Real-Time Sector Grid (Room Status)
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                            {rooms.map((room) => {
+                                const currentBooking = bookings.find(b => b.room?.id === room.id && b.status === 'Active');
+                                let statusColor = 'border-lime/30 text-lime bg-lime/5 shadow-glow-lime';
+                                let glowClass = 'shadow-glow-lime border-lime';
+                                if (room.status === 'OCCUPIED') {
+                                    statusColor = 'border-magenta/50 text-magenta bg-magenta/5 shadow-glow-magenta';
+                                    glowClass = 'shadow-glow-magenta border-magenta';
+                                } else if (room.status === 'DIRTY') {
+                                    statusColor = 'border-yellow/50 text-yellow bg-yellow/5';
+                                    glowClass = 'border-yellow shadow-[0_0_15px_rgba(255,255,0,0.3)]';
+                                }
+
+                                return (
+                                    <div key={room.id} className={`bg-dark p-5 rounded-xl border transition-all duration-300 hover:-translate-y-1 ${glowClass}`}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <span className="text-2xl font-bold font-mono text-white">#{room.roomNumber}</span>
+                                            <span className="text-xs font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded border border-white/10">
+                                                {room.roomNumber.startsWith('1') ? '1st Floor' : '2nd Floor'}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 font-mono mb-1">{room.type}</p>
+                                        <p className="text-lime font-bold font-mono text-sm mb-4">${room.pricePerNight.toFixed(0)}/night</p>
+                                        
+                                        <div className="flex flex-col gap-3">
+                                            <div className={`text-center font-mono py-1 rounded text-xs font-bold ${statusColor}`}>
+                                                {room.status || (room.isAvailable ? 'AVAILABLE' : 'OCCUPIED')}
+                                            </div>
+                                            {room.status === 'OCCUPIED' && currentBooking && (
+                                                <div className="text-[10px] text-gray-400 font-mono bg-card p-2 rounded border border-white/5 mt-1">
+                                                    <span className="text-magenta font-semibold">Guest:</span> {currentBooking.guest?.fullName}<br/>
+                                                    <span className="text-cyan font-semibold">Out:</span> {currentBooking.checkOutDate}
+                                                </div>
+                                            )}
+                                            {room.status === 'DIRTY' && (
+                                                <button onClick={() => handleCleanRoom(room.id)} className="w-full bg-yellow/10 border border-yellow text-yellow hover:bg-yellow hover:text-dark font-mono font-bold py-1.5 rounded transition-all text-xs flex items-center justify-center gap-1 mt-1 shadow-[0_0_8px_rgba(255,255,0,0.2)]">
+                                                    <Icon name="brush" className="w-3.5 h-3.5" /> Clean Room
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -189,7 +285,7 @@
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-cyan drop-shadow-[0_0_5px_rgba(0,255,255,0.5)]">
                                 <Icon name="terminal" className="w-5 h-5"/> Initialize New Guest Entity
                             </h3>
-                            {msg && <div className="mb-4 p-3 bg-lime/20 border border-lime text-lime rounded font-mono">{msg}</div>}
+                            {msg && <div className="mb-4 p-3 bg-lime/20 border border-lime text-lime rounded font-mono shadow-glow-lime animate-pulse">{msg}</div>}
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-2 gap-6">
                                     <div>
@@ -240,6 +336,8 @@
             const [bookings, setBookings] = useState([]);
             const [selectedGuest, setSelectedGuest] = useState('');
             const [selectedRoom, setSelectedRoom] = useState('');
+            const [checkInDate, setCheckInDate] = useState(new Date().toISOString().split('T')[0]);
+            const [checkOutDate, setCheckOutDate] = useState(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
             const [msg, setMsg] = useState('');
 
             const fetchData = async () => {
@@ -264,57 +362,115 @@
                 try {
                     const res = await fetch('http://localhost:8080/api/bookings', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ guest: guestObj, room: roomObj, checkInDate: new Date().toISOString().split('T')[0], status: 'Active' })
+                        body: JSON.stringify({ 
+                            guest: guestObj, 
+                            room: roomObj, 
+                            checkInDate: checkInDate, 
+                            checkOutDate: checkOutDate,
+                            status: 'Active' 
+                        })
                     });
                     if(res.ok) {
-                        setMsg("Booking Activated.");
+                        setMsg(`Sector ${roomObj.roomNumber} allocated to ${guestObj.fullName}.`);
+                        setSelectedGuest('');
+                        setSelectedRoom('');
                         fetchData();
                     }
                 } catch(e) { setMsg("Error activating booking."); }
                 setTimeout(()=>setMsg(''), 3000);
             };
 
+            const handleCheckOut = async (bookingId, roomNumber) => {
+                try {
+                    const res = await fetch(`http://localhost:8080/api/bookings/${bookingId}/checkout`, {
+                        method: 'POST'
+                    });
+                    if(res.ok) {
+                        setMsg(`Sector ${roomNumber} checkout complete. Room marked DIRTY.`);
+                        fetchData();
+                    }
+                } catch(e) { setMsg("Error executing checkout."); }
+                setTimeout(()=>setMsg(''), 3000);
+            };
+
+            // Only show AVAILABLE rooms for new bookings
+            const availableRooms = rooms.filter(r => r.status === 'AVAILABLE' || r.isAvailable);
+
             return (
                 <div className="animate-in fade-in duration-500">
                     <header className="mb-10 border-b border-cyan/30 pb-6">
-                        <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Sector Assignment (Check-In)</h2>
+                        <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Sector Assignment (Check-In / Out)</h2>
                     </header>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         <div className="bg-card p-8 rounded-xl border border-cyan/50 shadow-glow">
-                            <h3 className="text-xl font-bold mb-6 text-cyan font-mono flex items-center gap-2"><Icon name="key"/> Allocate Room</h3>
-                            {msg && <div className="mb-4 p-3 bg-lime/20 text-lime border border-lime rounded font-mono">{msg}</div>}
+                            <h3 className="text-xl font-bold mb-6 text-cyan font-mono flex items-center gap-2">
+                                <Icon name="key" className="text-cyan drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]"/> Allocate Room
+                            </h3>
+                            {msg && <div className="mb-4 p-3 bg-lime/20 text-lime border border-lime rounded font-mono shadow-glow-lime animate-pulse">{msg}</div>}
                             <form onSubmit={handleCheckIn} className="space-y-6">
                                 <div>
-                                    <label className="block text-cyan text-xs font-mono uppercase mb-2">Select Entity (Guest)</label>
-                                    <select value={selectedGuest} onChange={e=>setSelectedGuest(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white font-mono focus:border-cyan outline-none">
+                                    <label className="block text-cyan text-xs font-mono uppercase mb-2">Select Guest Entity</label>
+                                    <select value={selectedGuest} onChange={e=>setSelectedGuest(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white font-mono focus:border-cyan outline-none transition-all focus:shadow-glow">
                                         <option value="">-- Awaiting Selection --</option>
-                                        {guests.map(g => <option key={g.id} value={g.id}>{g.fullName}</option>)}
+                                        {guests.map(g => <option key={g.id} value={g.id}>{g.fullName} ({g.email})</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-cyan text-xs font-mono uppercase mb-2">Available Sectors (Rooms)</label>
-                                    <select value={selectedRoom} onChange={e=>setSelectedRoom(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white font-mono focus:border-cyan outline-none">
+                                    <select value={selectedRoom} onChange={e=>setSelectedRoom(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white font-mono focus:border-cyan outline-none transition-all focus:shadow-glow">
                                         <option value="">-- Awaiting Selection --</option>
-                                        {rooms.map(r => <option key={r.id} value={r.id}>Sector {r.roomNumber} - {r.type} (${r.pricePerNight})</option>)}
+                                        {availableRooms.map(r => (
+                                            <option key={r.id} value={r.id}>
+                                                Sector {r.roomNumber} - {r.type} (${r.pricePerNight}/night)
+                                            </option>
+                                        ))}
                                     </select>
+                                    {availableRooms.length === 0 && (
+                                        <p className="text-magenta font-mono text-xs mt-2">No available rooms. Check out active bookings or clean dirty rooms.</p>
+                                    )}
                                 </div>
-                                <button type="submit" className="w-full bg-magenta/20 border border-magenta text-magenta hover:bg-magenta hover:text-white font-bold font-mono py-4 rounded transition-all shadow-glow-magenta uppercase tracking-widest">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-cyan text-xs font-mono uppercase mb-2">Check-In Date</label>
+                                        <input type="date" value={checkInDate} onChange={e=>setCheckInDate(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white focus:outline-none focus:border-cyan focus:shadow-glow transition-all font-mono"/>
+                                    </div>
+                                    <div>
+                                        <label className="block text-cyan text-xs font-mono uppercase mb-2">Check-Out Date</label>
+                                        <input type="date" value={checkOutDate} onChange={e=>setCheckOutDate(e.target.value)} required className="w-full bg-dark border border-cyan/30 rounded p-3 text-white focus:outline-none focus:border-cyan focus:shadow-glow transition-all font-mono"/>
+                                    </div>
+                                </div>
+                                <button type="submit" className="w-full bg-magenta/20 border border-magenta text-magenta hover:bg-magenta hover:text-white font-bold font-mono py-4 rounded transition-all shadow-glow-magenta hover:shadow-glow-magenta-hover uppercase tracking-widest">
                                     Initiate Allocation
                                 </button>
                             </form>
                         </div>
-                        <div className="bg-card p-8 rounded-xl border border-cyan/50 shadow-glow overflow-y-auto h-[500px]">
-                            <h3 className="text-xl font-bold mb-6 text-cyan font-mono flex items-center gap-2"><Icon name="activity"/> Active Allocations</h3>
+                        <div className="bg-card p-8 rounded-xl border border-cyan/50 shadow-glow overflow-y-auto h-[600px]">
+                            <h3 className="text-xl font-bold mb-6 text-cyan font-mono flex items-center gap-2">
+                                <Icon name="activity" className="text-cyan drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]"/> Active Allocations
+                            </h3>
                             <div className="space-y-4">
-                                {bookings.filter(b=>b.status==='Active').map(b => (
-                                    <div key={b.id} className="p-4 border border-cyan/30 rounded bg-dark flex justify-between items-center">
-                                        <div>
-                                            <p className="text-white font-bold font-mono">{b.guest?.fullName}</p>
-                                            <p className="text-cyan text-xs font-mono">Sector: {b.room?.roomNumber}</p>
+                                {bookings.filter(b=>b.status==='Active').length === 0 ? (
+                                    <p className="text-gray-500 font-mono text-center py-10 border border-white/5 bg-dark rounded">No active sector allocations.</p>
+                                ) : (
+                                    bookings.filter(b=>b.status==='Active').map(b => (
+                                        <div key={b.id} className="p-4 border border-cyan/30 rounded bg-dark flex justify-between items-center hover:border-cyan transition-all">
+                                            <div>
+                                                <p className="text-white font-bold font-mono text-lg">{b.guest?.fullName}</p>
+                                                <p className="text-cyan text-sm font-mono mt-1">Sector: {b.room?.roomNumber} ({b.room?.type})</p>
+                                                <div className="flex gap-4 mt-2 text-xs text-gray-400 font-mono">
+                                                    <span>In: {b.checkInDate}</span>
+                                                    <span>Out: {b.checkOutDate}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-2 items-end">
+                                                <div className="px-3 py-1 bg-lime/20 text-lime text-xs font-mono border border-lime rounded shadow-glow-lime">ACTIVE</div>
+                                                <button onClick={() => handleCheckOut(b.id, b.room?.roomNumber)} className="px-3 py-1 bg-magenta/20 border border-magenta text-magenta hover:bg-magenta hover:text-white text-xs font-mono rounded transition-all shadow-glow-magenta">
+                                                    Check-Out
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="px-3 py-1 bg-lime/20 text-lime text-xs font-mono border border-lime rounded">ACTIVE</div>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
@@ -326,9 +482,15 @@
             const [bookings, setBookings] = useState([]);
             const [orders, setOrders] = useState([]);
             const [selectedBooking, setSelectedBooking] = useState('');
-            const [desc, setDesc] = useState('');
-            const [amount, setAmount] = useState('');
+            const [selectedItem, setSelectedItem] = useState(null);
             const [msg, setMsg] = useState('');
+
+            const menuItems = [
+                { id: 'sandwich', name: 'Club Sandwich', price: 15.00, icon: 'utensils' },
+                { id: 'coffee', name: 'Fresh Coffee', price: 5.00, icon: 'coffee' },
+                { id: 'towels', name: 'Extra Towels', price: 0.00, icon: 'pocket' },
+                { id: 'cleaning', name: 'Room Cleaning', price: 0.00, icon: 'brush' }
+            ];
 
             const fetchData = async () => {
                 try {
@@ -343,20 +505,43 @@
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
+                if(!selectedItem) {
+                    setMsg("Please select a menu item first.");
+                    return;
+                }
                 const bookingObj = bookings.find(b => b.id == selectedBooking);
                 if(!bookingObj) return;
 
                 try {
                     const res = await fetch('http://localhost:8080/api/orders', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ booking: bookingObj, description: desc, amount: parseFloat(amount), status: 'Pending' })
+                        body: JSON.stringify({ 
+                            booking: bookingObj, 
+                            description: selectedItem.name, 
+                            amount: selectedItem.price, 
+                            status: 'PENDING' 
+                        })
                     });
                     if(res.ok) {
-                        setMsg("Service Request Transmitted.");
-                        setDesc(''); setAmount('');
+                        setMsg(`Logistics order for Room ${bookingObj.room?.roomNumber} transmitted successfully.`);
+                        setSelectedItem(null);
+                        setSelectedBooking('');
                         fetchData();
                     }
-                } catch(e) {}
+                } catch(e) { setMsg("Error transmitting order."); }
+                setTimeout(()=>setMsg(''), 3000);
+            };
+
+            const handleDeliverOrder = async (orderId) => {
+                try {
+                    const res = await fetch(`http://localhost:8080/api/orders/${orderId}/status?status=DELIVERED`, {
+                        method: 'PUT'
+                    });
+                    if (res.ok) {
+                        setMsg("Service order delivered successfully.");
+                        fetchData();
+                    }
+                } catch(e) { setMsg("Error updating order."); }
                 setTimeout(()=>setMsg(''), 3000);
             };
 
@@ -365,44 +550,89 @@
                     <header className="mb-10 border-b border-magenta/30 pb-6">
                         <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Internal Logistics (Room Service)</h2>
                     </header>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div className="bg-card p-8 rounded-xl border border-magenta/50 shadow-glow-magenta">
-                            <h3 className="text-xl font-bold mb-6 text-magenta font-mono">Submit Service Request</h3>
-                            {msg && <div className="mb-4 p-3 bg-lime/20 text-lime border border-lime rounded font-mono">{msg}</div>}
+                            <h3 className="text-xl font-bold mb-6 text-magenta font-mono flex items-center gap-2">
+                                <Icon name="concierge-bell"/> Order Logistics Terminal
+                            </h3>
+                            {msg && <div className="mb-4 p-3 bg-lime/20 text-lime border border-lime rounded font-mono shadow-glow-lime animate-pulse">{msg}</div>}
+                            
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
-                                    <label className="block text-magenta text-xs font-mono uppercase mb-2">Target Sector (Active Booking)</label>
-                                    <select value={selectedBooking} onChange={e=>setSelectedBooking(e.target.value)} required className="w-full bg-dark border border-magenta/30 rounded p-3 text-white font-mono focus:border-magenta outline-none">
-                                        <option value="">-- Awaiting Selection --</option>
-                                        {bookings.map(b => <option key={b.id} value={b.id}>Sector {b.room?.roomNumber} - {b.guest?.fullName}</option>)}
+                                    <label className="block text-magenta text-xs font-mono uppercase mb-3">Select Visual Menu Item</label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {menuItems.map((item) => (
+                                            <div 
+                                                key={item.id} 
+                                                onClick={() => setSelectedItem(item)}
+                                                className={`p-4 rounded-lg bg-dark border cursor-pointer transition-all duration-300 flex items-center gap-4 ${selectedItem?.id === item.id ? 'border-magenta shadow-glow-magenta bg-magenta/10 scale-[1.02]' : 'border-magenta/25 hover:border-magenta hover:bg-magenta/5'}`}
+                                            >
+                                                <div className="p-3 bg-magenta/10 border border-magenta/30 rounded-lg">
+                                                    <Icon name={item.icon} className="text-magenta w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-white font-mono">{item.name}</p>
+                                                    <p className="text-lime font-mono text-sm">${item.price.toFixed(2)}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-magenta text-xs font-mono uppercase mb-2">Target Occupied Room Number</label>
+                                    <select value={selectedBooking} onChange={e=>setSelectedBooking(e.target.value)} required className="w-full bg-dark border border-magenta/30 rounded p-3 text-white font-mono focus:border-magenta outline-none transition-all focus:shadow-glow-magenta">
+                                        <option value="">-- Awaiting Room Selection --</option>
+                                        {bookings.map(b => (
+                                            <option key={b.id} value={b.id}>
+                                                Room {b.room?.roomNumber} - {b.guest?.fullName}
+                                            </option>
+                                        ))}
                                     </select>
+                                    {bookings.length === 0 && (
+                                        <p className="text-cyan font-mono text-xs mt-2">No occupied rooms available to receive orders. Check in guests first.</p>
+                                    )}
                                 </div>
-                                <div>
-                                    <label className="block text-magenta text-xs font-mono uppercase mb-2">Request Parameters</label>
-                                    <input type="text" value={desc} onChange={e=>setDesc(e.target.value)} required placeholder="e.g. Neon Energy Drink" className="w-full bg-dark border border-magenta/30 rounded p-3 text-white font-mono focus:border-magenta outline-none"/>
-                                </div>
-                                <div>
-                                    <label className="block text-magenta text-xs font-mono uppercase mb-2">Credit Amount</label>
-                                    <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} required placeholder="15.00" className="w-full bg-dark border border-magenta/30 rounded p-3 text-white font-mono focus:border-magenta outline-none"/>
-                                </div>
+
                                 <button type="submit" className="w-full bg-magenta border border-magenta text-white font-bold font-mono py-4 rounded transition-all shadow-glow-magenta hover:shadow-glow-magenta-hover uppercase tracking-widest">
                                     Transmit Order
                                 </button>
                             </form>
                         </div>
-                        <div className="bg-card p-8 rounded-xl border border-magenta/50 shadow-glow-magenta overflow-y-auto h-[500px]">
-                            <h3 className="text-xl font-bold mb-6 text-magenta font-mono">Logistics Log</h3>
+                        <div className="bg-card p-8 rounded-xl border border-magenta/50 shadow-glow-magenta overflow-y-auto h-[600px]">
+                            <h3 className="text-xl font-bold mb-6 text-magenta font-mono flex items-center gap-2">
+                                <Icon name="list"/> Service Logistics Log
+                            </h3>
                             <div className="space-y-4">
-                                {orders.map(o => (
-                                    <div key={o.id} className="p-4 border border-magenta/30 rounded bg-dark">
-                                        <div className="flex justify-between mb-2">
-                                            <span className="text-white font-mono font-bold">Sector {o.booking?.room?.roomNumber}</span>
-                                            <span className="text-yellow text-xs font-mono border border-yellow px-2 py-0.5 rounded">{o.status}</span>
-                                        </div>
-                                        <p className="text-gray-400 font-mono text-sm">{o.description}</p>
-                                        <p className="text-lime font-mono text-sm mt-2">${o.amount.toFixed(2)}</p>
-                                    </div>
-                                ))}
+                                {orders.length === 0 ? (
+                                    <p className="text-gray-500 font-mono text-center py-10 border border-white/5 bg-dark rounded">No logistics requests logged.</p>
+                                ) : (
+                                    [...orders].reverse().map(o => {
+                                        const isPending = o.status === 'PENDING' || o.status === 'Pending';
+                                        return (
+                                            <div key={o.id} className="p-4 border border-magenta/30 rounded bg-dark flex justify-between items-center hover:border-magenta transition-all">
+                                                <div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-white font-mono font-bold text-lg">Room {o.booking?.room?.roomNumber}</span>
+                                                        <span className="text-gray-400 font-mono text-xs">({o.booking?.guest?.fullName})</span>
+                                                    </div>
+                                                    <p className="text-gray-300 font-mono text-sm mt-2">{o.description}</p>
+                                                    <p className="text-lime font-mono text-sm mt-1 font-bold">${o.amount.toFixed(2)}</p>
+                                                </div>
+                                                <div className="flex flex-col gap-2 items-end">
+                                                    <span className={`text-xs font-mono font-bold border px-3 py-1 rounded shadow-glow-hover uppercase ${isPending ? 'text-yellow border-yellow/50 bg-yellow/5' : 'text-lime border-lime/50 bg-lime/5 shadow-glow-lime'}`}>
+                                                        {o.status}
+                                                    </span>
+                                                    {isPending && (
+                                                        <button onClick={() => handleDeliverOrder(o.id)} className="px-3 py-1 bg-magenta/20 border border-magenta text-magenta hover:bg-magenta hover:text-white text-xs font-mono rounded transition-all shadow-glow-magenta">
+                                                            Mark Delivered
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
                     </div>
@@ -413,15 +643,18 @@
         const PaymentDetails = () => {
             const [bookings, setBookings] = useState([]);
             const [orders, setOrders] = useState([]);
+            const [payments, setPayments] = useState([]);
             const [selectedBooking, setSelectedBooking] = useState('');
             const [msg, setMsg] = useState('');
 
             const fetchData = async () => {
                 try {
                     const bRes = await fetch('http://localhost:8080/api/bookings');
-                    if(bRes.ok) setBookings((await bRes.json()).filter(b=>b.status==='Active'));
+                    if(bRes.ok) setBookings(await bRes.json());
                     const oRes = await fetch('http://localhost:8080/api/orders');
                     if(oRes.ok) setOrders(await oRes.json());
+                    const pRes = await fetch('http://localhost:8080/api/payments');
+                    if(pRes.ok) setPayments(await pRes.json());
                 } catch(e) {}
             };
 
@@ -429,27 +662,53 @@
 
             const handlePayment = async (total) => {
                 const bookingObj = bookings.find(b => b.id == selectedBooking);
+                if (!bookingObj) return;
                 try {
                     const res = await fetch('http://localhost:8080/api/payments', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ booking: bookingObj, totalAmount: total, paymentDate: new Date().toISOString(), isPaid: true })
+                        body: JSON.stringify({ 
+                            booking: bookingObj, 
+                            totalAmount: total, 
+                            paymentDate: new Date().toISOString(), 
+                            isPaid: true 
+                        })
                     });
-                    if(res.ok) setMsg("Transaction Verified & Logged.");
+                    if(res.ok) {
+                        setMsg("Transaction Authorized & Paid.");
+                        fetchData();
+                    }
                 } catch(e) { setMsg("Transaction Failed."); }
                 setTimeout(()=>setMsg(''), 3000);
             };
 
+            let daysStayed = 1;
             let total = 0;
-            let roomCost = 0;
+            let roomRate = 0;
+            let roomTotal = 0;
             let orderTotal = 0;
             let bOrders = [];
-            if(selectedBooking) {
-                const b = bookings.find(x => x.id == selectedBooking);
-                if(b) {
-                    roomCost = b.room?.pricePerNight || 0;
-                    bOrders = orders.filter(o => o.booking?.id == selectedBooking);
-                    orderTotal = bOrders.reduce((sum, o) => sum + o.amount, 0);
-                    total = roomCost + orderTotal;
+            let isAlreadyPaid = false;
+
+            const selectedB = bookings.find(x => x.id == selectedBooking);
+            if(selectedB) {
+                // Calculate Days Stayed
+                const start = new Date(selectedB.checkInDate);
+                const end = new Date(selectedB.checkOutDate);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                daysStayed = isNaN(diffDays) ? 1 : Math.max(1, diffDays);
+
+                roomRate = selectedB.room?.pricePerNight || 0;
+                roomTotal = roomRate * daysStayed;
+
+                bOrders = orders.filter(o => o.booking?.id == selectedB.id);
+                orderTotal = bOrders.reduce((sum, o) => sum + o.amount, 0);
+                total = roomTotal + orderTotal;
+
+                // Check if this booking is already marked PAID
+                const existingPayment = payments.find(p => p.booking?.id == selectedB.id);
+                if (existingPayment && existingPayment.isPaid) {
+                    isAlreadyPaid = true;
                 }
             }
 
@@ -458,47 +717,93 @@
                     <header className="mb-10 border-b border-lime/30 pb-6">
                         <h2 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Financial Gateway (Payments)</h2>
                     </header>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div className="bg-card p-8 rounded-xl border border-lime/50 shadow-glow-lime">
-                            <h3 className="text-xl font-bold mb-6 text-lime font-mono">Select Account</h3>
-                            {msg && <div className="mb-4 p-3 bg-cyan/20 text-cyan border border-cyan rounded font-mono">{msg}</div>}
-                            <select value={selectedBooking} onChange={e=>setSelectedBooking(e.target.value)} className="w-full bg-dark border border-lime/30 rounded p-3 text-white font-mono focus:border-lime outline-none mb-6">
-                                <option value="">-- Select Active Sector --</option>
-                                {bookings.map(b => <option key={b.id} value={b.id}>Sector {b.room?.roomNumber} - {b.guest?.fullName}</option>)}
+                            <h3 className="text-xl font-bold mb-6 text-lime font-mono flex items-center gap-2">
+                                <Icon name="credit-card" /> Financial Allocation Portal
+                            </h3>
+                            {msg && <div className="mb-4 p-3 bg-cyan/20 text-cyan border border-cyan rounded font-mono shadow-glow animate-pulse">{msg}</div>}
+                            
+                            <label className="block text-lime text-xs font-mono uppercase mb-2">Select Active or Completed Room Booking</label>
+                            <select value={selectedBooking} onChange={e=>setSelectedBooking(e.target.value)} className="w-full bg-dark border border-lime/30 rounded p-3 text-white font-mono focus:border-lime outline-none transition-all focus:shadow-glow-lime mb-6">
+                                <option value="">-- Select Room Number --</option>
+                                {bookings.map(b => (
+                                    <option key={b.id} value={b.id}>
+                                        Room {b.room?.roomNumber} - {b.guest?.fullName} ({b.status})
+                                    </option>
+                                ))}
                             </select>
 
-                            {selectedBooking && (
-                                <div className="space-y-4 font-mono">
-                                    <div className="flex justify-between border-b border-gray-800 pb-2">
-                                        <span className="text-gray-400">Sector Base Rate:</span>
-                                        <span className="text-white">${roomCost.toFixed(2)}</span>
+                            {selectedB ? (
+                                <div className="space-y-6 font-mono border border-white/5 bg-dark p-6 rounded-xl">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-lg font-bold text-white">Invoice details</span>
+                                        {isAlreadyPaid ? (
+                                            <span className="px-3 py-1 bg-lime/20 border border-lime text-lime font-bold rounded text-xs shadow-glow-lime animate-pulse">PAID</span>
+                                        ) : (
+                                            <span className="px-3 py-1 bg-yellow/20 border border-yellow text-yellow font-bold rounded text-xs">UNPAID</span>
+                                        )}
                                     </div>
-                                    <div className="flex justify-between border-b border-gray-800 pb-2">
-                                        <span className="text-gray-400">Logistics (Orders):</span>
-                                        <span className="text-white">${orderTotal.toFixed(2)}</span>
+                                    <div className="text-xs text-gray-400 space-y-1 mb-4 border-b border-white/10 pb-4">
+                                        <p><span className="text-lime font-semibold">Guest:</span> {selectedB.guest?.fullName}</p>
+                                        <p><span className="text-lime font-semibold">Room Type:</span> {selectedB.room?.type} (#{selectedB.room?.roomNumber})</p>
+                                        <p><span className="text-lime font-semibold">Interval:</span> {selectedB.checkInDate} to {selectedB.checkOutDate}</p>
+                                        <p><span className="text-lime font-semibold">Stay Duration:</span> {daysStayed} night(s)</p>
                                     </div>
-                                    <div className="flex justify-between pt-4">
-                                        <span className="text-lime font-bold text-xl">TOTAL DUE:</span>
-                                        <span className="text-lime font-bold text-xl drop-shadow-[0_0_5px_rgba(57,255,20,0.8)]">${total.toFixed(2)}</span>
+
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between text-sm border-b border-white/5 pb-2">
+                                            <span className="text-gray-400">Base Room Rate:</span>
+                                            <span className="text-white">${roomRate.toFixed(2)}/night</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm border-b border-white/5 pb-2">
+                                            <span className="text-gray-400">Total Room Cost ({daysStayed} nights):</span>
+                                            <span className="text-white">${roomTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm border-b border-white/5 pb-2">
+                                            <span className="text-gray-400">Logistics (Room Service):</span>
+                                            <span className="text-white">${orderTotal.toFixed(2)}</span>
+                                        </div>
+                                        
+                                        <div className="flex justify-between pt-4 border-t border-white/10 mt-4">
+                                            <span className="text-lime font-bold text-xl">TOTAL DUE:</span>
+                                            <span className="text-lime font-bold text-xl drop-shadow-[0_0_5px_rgba(57,255,20,0.8)]">${total.toFixed(2)}</span>
+                                        </div>
                                     </div>
-                                    <button onClick={()=>handlePayment(total)} className="w-full mt-6 bg-lime/20 border border-lime text-lime hover:bg-lime hover:text-dark font-bold font-mono py-4 rounded transition-all shadow-glow-lime uppercase tracking-widest">
-                                        Process Transaction
-                                    </button>
+
+                                    {!isAlreadyPaid ? (
+                                        <button onClick={()=>handlePayment(total)} className="w-full mt-6 bg-lime/20 border border-lime text-lime hover:bg-lime hover:text-dark font-bold font-mono py-4 rounded transition-all shadow-glow-lime hover:shadow-glow-lime-hover uppercase tracking-widest">
+                                            Clear Balance (Mark Paid)
+                                        </button>
+                                    ) : (
+                                        <div className="w-full mt-6 bg-lime text-dark font-bold font-mono py-4 rounded text-center uppercase tracking-widest shadow-glow-lime">
+                                            Account Fully Settled
+                                        </div>
+                                    )}
                                 </div>
+                            ) : (
+                                <p className="text-gray-500 font-mono text-center py-10 border border-white/5 bg-dark rounded">Select a room booking above to view detailed invoice billing.</p>
                             )}
                         </div>
-                        {selectedBooking && (
-                            <div className="bg-card p-8 rounded-xl border border-lime/30 shadow-glow-lime">
-                                <h3 className="text-xl font-bold mb-6 text-lime font-mono">Logistics Breakdown</h3>
-                                <div className="space-y-3">
-                                    {bOrders.length===0 ? <p className="text-gray-500 font-mono">No external orders logged.</p> :
+                        {selectedB && (
+                            <div className="bg-card p-8 rounded-xl border border-lime/30 shadow-glow-lime flex flex-col h-[550px]">
+                                <h3 className="text-xl font-bold mb-6 text-lime font-mono flex items-center gap-2">
+                                    <Icon name="list"/> Room Service Orders Breakdown
+                                </h3>
+                                <div className="space-y-4 overflow-y-auto flex-1">
+                                    {bOrders.length===0 ? (
+                                        <p className="text-gray-500 font-mono text-center py-10 border border-white/5 bg-dark rounded">No room service orders logged for this booking.</p>
+                                    ) : (
                                         bOrders.map(o=>(
-                                            <div key={o.id} className="flex justify-between text-sm font-mono border-b border-gray-800 pb-2">
-                                                <span className="text-gray-300">{o.description}</span>
-                                                <span className="text-white">${o.amount.toFixed(2)}</span>
+                                            <div key={o.id} className="p-4 bg-dark rounded border border-white/5 hover:border-lime/30 transition-all flex justify-between items-center font-mono">
+                                                <div>
+                                                    <p className="text-white font-bold">{o.description}</p>
+                                                    <p className="text-xs text-gray-400 mt-1">Status: {o.status}</p>
+                                                </div>
+                                                <span className="text-lime font-bold">${o.amount.toFixed(2)}</span>
                                             </div>
                                         ))
-                                    }
+                                    )}
                                 </div>
                             </div>
                         )}

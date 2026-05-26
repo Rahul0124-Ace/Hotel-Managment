@@ -15,31 +15,27 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (roomRepository.count() == 0) {
+            // First Floor: Rooms 101, 102, 103, 104, 105 (Standard Rooms - $100/night)
             for (int i = 1; i <= 5; i++) {
                 Room r = new Room();
                 r.setRoomNumber("10" + i);
-                r.setType("Single");
+                r.setType("Standard Room");
                 r.setPricePerNight(100.0);
                 r.setIsAvailable(true);
+                r.setStatus("AVAILABLE");
                 roomRepository.save(r);
             }
-            for (int i = 1; i <= 3; i++) {
+            // Second Floor: Rooms 201, 202, 203, 204, 205 (Deluxe Suites - $200/night)
+            for (int i = 1; i <= 5; i++) {
                 Room r = new Room();
                 r.setRoomNumber("20" + i);
-                r.setType("Double");
-                r.setPricePerNight(150.0);
+                r.setType("Deluxe Suite");
+                r.setPricePerNight(200.0);
                 r.setIsAvailable(true);
+                r.setStatus("AVAILABLE");
                 roomRepository.save(r);
             }
-            for (int i = 1; i <= 2; i++) {
-                Room r = new Room();
-                r.setRoomNumber("30" + i);
-                r.setType("Suite");
-                r.setPricePerNight(250.0);
-                r.setIsAvailable(true);
-                roomRepository.save(r);
-            }
-            System.out.println("Seeded 10 rooms into the database.");
+            System.out.println("Seeded exactly 10 rooms into the database.");
         }
     }
 }
